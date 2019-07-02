@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xm.dao.UserDao" >
+	<resultMap type="shoppingCar" id="resultMapShoppingCar">
+		<id property="sid" column="sid"></id>
+		<result property="amount" column="amount"></result>
+		<result property="subtotal" column="subtotal"></result>
+		<collection property="products" ofType="products">
+            <id property="pid" column="pid" />
+            <result property="picture" column="picture" />
+            <result property="pname" column="pname"></result>
+            <result property="version" column="version"></result>
+            <result property="color" column="color"></result>
+            <result property="price" column="price"></result>
+ 		 </collection> 
+	</resultMap>
+    <!-- 查询用户 -->
+    <select id="findUser" parameterType="String" resultType="user">
+	    select *
+	    from user
+	    where phone = #{usercode}
+	    and password =#{password}
+    </select>
+    <insert id="addUser" parameterType="String">
+    	insert into user(uname,password,phone) value(#{uname},#{password},#{usercode})
+    </insert>
+    <select id="findShoppingCar" parameterType="int" resultMap="resultMapShoppingCar">
+    	select sid,shoppingcar.pid,picture,pname,version,color,price,amount,price*amount as subtotal from shoppingcar,products where
+    	shoppingcar.uid=#{uid} and shoppingcar.pid=products.pid;
+    </select>
+    <delete id="deleteShoppingCar" parameterType="int">
+    	delete from shoppingcar where sid=#{sid}
+    </delete>
+    <update id="updateShoppingCarAmount" parameterType="int">
+    	update shoppingcar SET amount=#{amount} WHERE sid=#{sid}
+    </update>
+    <insert id="addOrder" parameterType="int">
+    	INSERT INTO `order` 
+    	(date,subtotal,uid,pid) 
+    	select now(),
+    (select price*amount as subtotal from products,shoppingcar where 
+    	products.pid=(select shoppingcar.pid from shoppingcar where sid=#{sid} ) and sid=#{sid}) ,
+    	uid,pid from shoppingcar where sid=#{sid}
+    </insert>
+    <select id="findOrder" parameterType="int" resultType="order">
+    	select picture,oid,`condition`,subtotal,date from products,`order` where uid=#{uid} and products.pid=`order`.pid
+    </select>
+     <delete id="deleteOrder" parameterType="int">
+    	delete from `order` where oid=#{oid}
+    </delete>
+    <select id="allProducts"  resultType="products">
+    	select * from products
+    </select>
+    <select id="findProduct"  parameterType="int" resultType="products">
+    	select * from products where pid=#{pid}
+    </select>
+    <insert id="chooseAddOrder" parameterType="int">
+    	insert into `order`(date,subtotal,uid,pid) value (NOW(),#{price},#{uid},#{pid})
+    </insert>
+    <insert id="addShoppingCar" parameterType="int">
+    	insert into shoppingcar (uid,pid) value (#{uid},#{pid})
+    </insert>
+</mapper>
